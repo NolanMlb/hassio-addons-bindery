@@ -46,13 +46,25 @@ jobs:
           INFO_DESCRIPTION: ${{ steps.info.outputs.description }}
           INFO_URL: ${{ steps.info.outputs.url }}
         run: |
-          echo "image_name=${INFO_IMAGE##*/}" >> "$GITHUB_OUTPUT"
-          echo "registry_prefix=${INFO_IMAGE%/*}" >> "$GITHUB_OUTPUT"
-          echo "version=${INFO_VERSION}" >> "$GITHUB_OUTPUT"
-          echo "name=${INFO_NAME}" >> "$GITHUB_OUTPUT"
-          echo "description=${INFO_DESCRIPTION}" >> "$GITHUB_OUTPUT"
-          if [[ -n "${INFO_URL}" && "${INFO_URL}" != "null" ]]; then
-            echo "url=${INFO_URL}" >> "$GITHUB_OUTPUT"
+          # The info helper reads config.yaml with `yq -o=json`, so every value
+          # arrives as a JSON scalar: strings keep their double quotes, and the
+          # build action does not strip them back (a quoted tag is an invalid
+          # reference). Decode them here, keeping a plain value as-is.
+          unquote() { printf '%s' "${1}" | jq -Rs 'fromjson? // .'; }
+
+          image="$(unquote "${INFO_IMAGE}")"
+          version="$(unquote "${INFO_VERSION}")"
+          name="$(unquote "${INFO_NAME}")"
+          description="$(unquote "${INFO_DESCRIPTION}")"
+          url="$(unquote "${INFO_URL}")"
+
+          echo "image_name=${image##*/}" >> "$GITHUB_OUTPUT"
+          echo "registry_prefix=${image%/*}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+          echo "description=${description}" >> "$GITHUB_OUTPUT"
+          if [[ -n "${url}" && "${url}" != "null" ]]; then
+            echo "url=${url}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Prepare build matrix
