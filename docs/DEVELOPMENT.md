@@ -65,14 +65,18 @@ docker run --rm -it --privileged --device /dev/sda1 \
 ## Tests
 
 ```bash
-make test          # 31 assertions, builds the image first
+make test          # 33 assertions, builds the image first
 make test-no-build # against the existing image
 ```
 
 `tests/smoke-test.sh` covers: default storage on `/media`, the database surviving a restart,
-`PUID`/`PGID`, `env_vars` passthrough and its guards, an ext4 disk mounted by label with a hardlink
-proof, a folder-only mount, a missing disk stopping the app, a library path outside a mount being
-refused, and the crash-loop breaker that stops the app after six restarts.
+`PUID`/`PGID`, `env_vars` passthrough and its guards, an ext4 disk mounted by label and by UUID with
+a hardlink proof, a folder-only mount, a missing disk stopping the app, a library path outside a
+mount being refused, a container-relative path being refused, and the crash-loop breaker that stops
+the app after six restarts.
+
+`tests/test-parsing.sh` unit-tests the `blkid` field parser on realistic lines — including the
+`PARTUUID` that once made a disk's own UUID unrecognisable — and runs as part of the suite.
 
 Disk tests build a loop device inside a privileged container; they are skipped when the Docker
 daemon does not allow that.

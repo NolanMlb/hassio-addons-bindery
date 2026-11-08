@@ -1,4 +1,13 @@
 <!-- https://contributors.home-assistant.io/apps/guides/presentation/#changelog -->
+## 1.48.0-3
+
+- **Refuse a library or download path that is not on persistent storage.** A path such as
+  `/Media/Books` or `/Downloads` is created inside the app's own filesystem: it is empty after every
+  update and the books written there are lost. It used to produce a warning and start anyway; it is
+  now a startup error naming the four persistent locations (`/media`, `/share`, `/mnt/<disk>`,
+  `/data`).
+- Smoke tests: 33 assertions, including that refusal.
+
 ## 1.48.0-2
 
 - **Fix a disk identified by UUID never being found.** A real disk is listed by `blkid` with

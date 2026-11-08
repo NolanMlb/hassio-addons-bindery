@@ -25,7 +25,7 @@ cleanup() {
         docker run --rm --privileged -v /dev:/dev alpine:3.22 losetup -d "${LOOPDEV}" >/dev/null 2>&1
     fi
     docker volume rm -f smoke-t2-data >/dev/null 2>&1
-    docker rm -f smoke-bindery smoke-puid smoke-disk smoke-uuid smoke-sub smoke-bad smoke-nodev smoke-loop >/dev/null 2>&1
+    docker rm -f smoke-bindery smoke-puid smoke-disk smoke-uuid smoke-sub smoke-bad smoke-nodev smoke-ephemeral smoke-loop >/dev/null 2>&1
     rm -rf "${WORK}"
 }
 trap cleanup EXIT
@@ -249,6 +249,20 @@ log_has smoke-nodev 'not inside a mounted disk' \
     && ok "library on an unmounted path is refused" || ko "library on an unmounted path is refused"
 docker rm -f smoke-nodev >/dev/null 2>&1
 
+
+echo "== Test 6b: a container-relative path is refused (it would be lost on update)"
+D8="${WORK}/t6b"
+mkdir -p "${D8}/media" "${D8}/share"
+write_options "${D8}" '{"log_level":"info","TZ":"UTC","PUID":0,"PGID":0,"localdisks":[],
+ "library_dir":"/Media/Books","downloads_dir":"/Downloads","audiobooks_dir":"",
+ "audiobook_downloads_dir":"","dir_mode":"0750","telemetry":true,"env_vars":[]}'
+run_app smoke-ephemeral "${D8}" "$((PORT + 8))"
+sleep 8
+log_has smoke-ephemeral 'is not on persistent storage' \
+    && ok "un chemin hors stockage persistant est refusé" || ko "un chemin hors stockage persistant est refusé"
+check_not "l'app n'est pas laissée tourner sur un chemin éphémère" \
+    sh -c "docker inspect -f '{{.State.Running}}' smoke-ephemeral 2>/dev/null | grep -q true"
+docker rm -f smoke-ephemeral >/dev/null 2>&1
 
 echo "== Test 7: repeated crashes stop the app instead of looping forever"
 D7="${WORK}/t7"

@@ -265,7 +265,15 @@ ensure_dir() {
             ;;
         /media | /media/* | /share | /share/* | /data | /data/*) ;;
         *)
-            warn "${label} '${path}' is outside /media, /share, /mnt and /data: it will not survive a restart of the app"
+            error "${label} '${path}' is not on persistent storage."
+            error "A path like that is created in the app's own filesystem: it disappears when the"
+            error "app is updated or recreated, and the books written to it are lost with it."
+            error "Use one of:"
+            error "  /media/...   Home Assistant's media folder (mapped read-write)"
+            error "  /share/...   Home Assistant's share folder"
+            error "  /mnt/<disk>/...  a disk listed in 'localdisks', e.g. /mnt/sda1/Media/Books"
+            error "  /data/...    the app's private folder"
+            exit 1
             ;;
     esac
 

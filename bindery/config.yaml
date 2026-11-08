@@ -1,5 +1,5 @@
 name: Bindery
-version: "1.48.0-2"
+version: "1.48.0-3"
 slug: bindery
 description: Automated ebook and audiobook manager (Readarr replacement) with Prowlarr and qBittorrent support
 url: "https://github.com/NolanMlb/hassio-addons-bindery/tree/main/bindery"
