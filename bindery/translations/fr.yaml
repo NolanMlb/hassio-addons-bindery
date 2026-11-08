@@ -1,0 +1,59 @@
+configuration:
+  log_level:
+    name: Niveau de journalisation
+    description: Quantité de messages écrits dans le journal de l'application.
+  TZ:
+    name: Fuseau horaire
+    description: Fuseau horaire du conteneur, par exemple Europe/Paris.
+  PUID:
+    name: Identifiant utilisateur (PUID)
+    description: >-
+      UID qui écrit la bibliothèque. 0 correspond à root, comme la plupart des
+      clients de téléchargement. Si vous le modifiez, faites de même pour PGID et
+      vérifiez que les dossiers concernés sont accessibles en écriture à cet
+      utilisateur.
+  PGID:
+    name: Identifiant de groupe (PGID)
+    description: GID qui écrit la bibliothèque. À garder cohérent avec PUID.
+  localdisks:
+    name: Disques locaux
+    description: >-
+      Disques externes à monter : sda1, un label, un UUID, ou « sda1/Media/Books »
+      pour n'exposer qu'un dossier. Laisser vide pour utiliser uniquement les
+      dossiers Home Assistant (/media et /share), sans disque externe.
+  library_dir:
+    name: Dossier de la bibliothèque
+    description: >-
+      Où Bindery range les livres importés, vu depuis l'application. Par défaut
+      /media/books, le dossier média de Home Assistant.
+  downloads_dir:
+    name: Dossier des téléchargements
+    description: >-
+      Où le client de téléchargement dépose les livres terminés, vu depuis
+      l'application. Utilisez le même point de montage que le client (par défaut
+      /media/downloads) pour éviter tout remappage de chemin.
+  audiobooks_dir:
+    name: Dossier des livres audio
+    description: >-
+      Dossier séparé facultatif pour les livres audio. Laisser vide pour les ranger
+      avec les ebooks dans la bibliothèque.
+  audiobook_downloads_dir:
+    name: Dossier des téléchargements audio
+    description: >-
+      Dossier séparé facultatif pour les téléchargements de livres audio. Laisser
+      vide pour réutiliser le dossier des téléchargements.
+  dir_mode:
+    name: Permissions des dossiers
+    description: >-
+      Permissions des dossiers créés par Bindery. Passez à 0755 si un autre
+      programme doit lire la bibliothèque avec un autre utilisateur.
+  telemetry:
+    name: Statistiques d'utilisation anonymes
+    description: >-
+      Bindery envoie une requête anonyme par jour. Désactivez cette option pour
+      couper la télémétrie dès le premier démarrage.
+  env_vars:
+    name: Variables d'environnement supplémentaires
+    description: >-
+      Réglages avancés, transmis à Bindery sous la forme BINDERY_*. Voir la
+      documentation pour la liste des variables prises en charge.

@@ -1,0 +1,15 @@
+# Ebooks and their downloads on sda1, audiobooks on sdb1.
+log_level: info
+TZ: Europe/Paris
+PUID: 1000
+PGID: 1000
+localdisks:
+  - sda1
+  - sdb1
+library_dir: /mnt/sda1/Media/Books
+downloads_dir: /mnt/sda1/Downloads/books
+audiobooks_dir: /mnt/sdb1/Audiobooks
+audiobook_downloads_dir: /mnt/sdb1/Downloads
+dir_mode: "0755"
+telemetry: false
+env_vars: []

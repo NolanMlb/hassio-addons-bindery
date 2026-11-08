@@ -1,0 +1,121 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+# ==============================================================================
+# Bindery app - service
+#
+# Translates the app options into the environment variables Bindery documents
+# (docs/DEPLOYMENT.md, "Environment variables"), then drops root and execs the
+# official binary. Nothing about the user's installation is assumed here.
+# ==============================================================================
+set -euo pipefail
+
+# shellcheck source=/dev/null
+. /usr/lib/bindery/common.sh
+
+PUID="$(opt PUID 0)"
+PGID="$(opt PGID 0)"
+LOG_LEVEL="$(opt log_level info)"
+TZ_VALUE="$(opt TZ UTC)"
+DIR_MODE="$(opt dir_mode 0750)"
+LIBRARY_DIR="$(opt library_dir /media/books)"
+DOWNLOADS_DIR="$(opt downloads_dir /media/downloads)"
+AUDIOBOOKS_DIR="$(opt audiobooks_dir "")"
+AUDIOBOOK_DOWNLOADS_DIR="$(opt audiobook_downloads_dir "")"
+TELEMETRY="$(opt telemetry true)"
+
+# The web server always listens on 8787 inside the container: that is the port
+# the Supervisor maps, the webui button and the watchdog point at. The port a
+# user reaches it on is changed in the app's network settings, not here.
+export BINDERY_PORT=8787
+
+export TZ="${TZ_VALUE}"
+export BINDERY_LOG_LEVEL="${LOG_LEVEL}"
+export BINDERY_DATA_DIR="${DATA_DIR}"
+export BINDERY_DB_PATH="${DATA_DIR}/bindery.db"
+export BINDERY_DIR_MODE="${DIR_MODE}"
+export BINDERY_LIBRARY_DIR="${LIBRARY_DIR}"
+export BINDERY_DOWNLOAD_DIR="${DOWNLOADS_DIR}"
+export BINDERY_PUID="${PUID}"
+export BINDERY_PGID="${PGID}"
+
+if [ -n "${AUDIOBOOKS_DIR}" ]; then
+    export BINDERY_AUDIOBOOK_DIR="${AUDIOBOOKS_DIR}"
+fi
+if [ -n "${AUDIOBOOK_DOWNLOADS_DIR}" ]; then
+    export BINDERY_AUDIOBOOK_DOWNLOAD_DIR="${AUDIOBOOK_DOWNLOADS_DIR}"
+fi
+
+case "${TELEMETRY}" in
+    true | True | TRUE | 1 | yes | on) ;;
+    *) export BINDERY_TELEMETRY_DISABLED=true ;;
+esac
+
+# Extra BINDERY_* variables chosen by the user (advanced knobs documented
+# upstream). The schema restricts the names to BINDERY_*, so nothing here can
+# shadow PATH, HOME or the variables set above.
+while IFS= read -r entry; do
+    [ -n "${entry}" ] || continue
+    name="${entry%%=*}"
+    value="${entry#*=}"
+    [ -n "${name}" ] || continue
+    case "${name}" in
+        BINDERY_LIBRARY_DIR | BINDERY_DOWNLOAD_DIR | BINDERY_DATA_DIR | \
+            BINDERY_DB_PATH | BINDERY_PORT | BINDERY_PUID | BINDERY_PGID)
+            warn "env_vars: ${name} is driven by the app options and is ignored here"
+            continue
+            ;;
+    esac
+    export "${name}=${value}"
+    case "${name}" in
+        *PASS* | *TOKEN* | *KEY* | *SECRET*) info "env_vars: ${name}=********" ;;
+        *) info "env_vars: ${name}=${value}" ;;
+    esac
+done < <(jq -r '(.env_vars // [])[]? | "\(.name)=\(.value // "")"' \
+    "${OPTIONS_FILE}" 2>/dev/null || true)
+
+info "Starting Bindery as ${PUID}:${PGID} (data: ${DATA_DIR}, library: ${LIBRARY_DIR})"
+
+# ------------------------------------------------------------------------------
+# Crash-loop breaker
+#
+# s6 restarts a service that exits, which is what we want for a transient
+# failure but not for a Bindery that cannot start at all: the app would restart
+# forever and Home Assistant would show it as running. Six starts inside five
+# minutes means something is broken, so stop the container instead and let the
+# Supervisor report the app as stopped.
+# ------------------------------------------------------------------------------
+STATE_DIR=/run/bindery
+STATE_FILE="${STATE_DIR}/restart-state"
+mkdir -p "${STATE_DIR}"
+
+restarts=0
+window_start=0
+if [ -r "${STATE_FILE}" ]; then
+    read -r restarts window_start <"${STATE_FILE}" || true
+    restarts="${restarts:-0}"
+    window_start="${window_start:-0}"
+fi
+now="$(date +%s)"
+case "${restarts}" in
+    '' | *[!0-9]*) restarts=0 ;;
+esac
+case "${window_start}" in
+    '' | *[!0-9]*) window_start=0 ;;
+esac
+if [ "${window_start}" -eq 0 ] || [ $((now - window_start)) -gt 300 ]; then
+    restarts=0
+    window_start="${now}"
+fi
+restarts=$((restarts + 1))
+printf '%s %s\n' "${restarts}" "${window_start}" >"${STATE_FILE}"
+
+if [ "${restarts}" -gt 6 ]; then
+    error "Bindery was started ${restarts} times in $((now - window_start))s: giving up."
+    error "Look at the lines above for the cause; the log level can be raised with the"
+    error "'log_level' option. Fix the problem, then start the app again."
+    echo 1 > /run/s6-linux-init-container-results/exitcode
+    exec /run/s6/basedir/bin/halt
+fi
+
+umask 0022
+exec s6-setuidgid "${PUID}:${PGID}" /usr/bin/bindery

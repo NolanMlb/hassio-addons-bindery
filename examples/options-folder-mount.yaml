@@ -1,0 +1,16 @@
+# Only /mnt/sda1/Media/Books is mounted: the rest of the disk stays invisible.
+# Keep downloads inside that mounted folder, otherwise Bindery copies instead of
+# hardlinking (two mounts = two filesystems).
+log_level: info
+TZ: Europe/Paris
+PUID: 0
+PGID: 0
+localdisks:
+  - sda1/Media/Books
+library_dir: /mnt/sda1/Media/Books
+downloads_dir: /mnt/sda1/Media/Books/downloads
+audiobooks_dir: ""
+audiobook_downloads_dir: ""
+dir_mode: "0750"
+telemetry: true
+env_vars: []

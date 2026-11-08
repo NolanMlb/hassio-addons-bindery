@@ -1,0 +1,22 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "docker:disable"],
+  "packageRules": [
+    {
+      "description": "Follow Bindery releases: bump BINDERY_VERSION in the Dockerfile and the app version together",
+      "matchFileNames": ["bindery/Dockerfile"],
+      "matchDepNames": ["ghcr.io/vavallee/bindery"],
+      "automerge": false,
+      "labels": ["dependency", "bindery"]
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^bindery/Dockerfile$"],
+      "matchStrings": ["ARG BINDERY_VERSION=(?<currentValue>[0-9.]+)"],
+      "depNameTemplate": "ghcr.io/vavallee/bindery",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}

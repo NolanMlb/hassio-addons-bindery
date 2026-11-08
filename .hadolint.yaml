@@ -1,0 +1,5 @@
+ignored:
+  # Package versions are not pinned on purpose: see the note in bindery/Dockerfile.
+  - DL3018
+  # The shell form of HEALTHCHECK turns curl's exit code into a health status.
+  - DL3025

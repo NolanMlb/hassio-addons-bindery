@@ -1,0 +1,13 @@
+# Home Assistant's media folder only. Works on a stock installation, no external disk.
+log_level: info
+TZ: Europe/Paris
+PUID: 0
+PGID: 0
+localdisks: []
+library_dir: /media/books
+downloads_dir: /media/downloads
+audiobooks_dir: ""
+audiobook_downloads_dir: ""
+dir_mode: "0750"
+telemetry: true
+env_vars: []

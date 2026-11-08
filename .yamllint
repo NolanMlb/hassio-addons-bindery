@@ -1,0 +1,10 @@
+extends: default
+
+rules:
+  # Store descriptions and option help texts are long lines on purpose.
+  line-length: disable
+  # We do not put '---' at the top of every file.
+  document-start: disable
+  truthy:
+    allowed-values: ["true", "false", "on"]
+  comments-indentation: disable

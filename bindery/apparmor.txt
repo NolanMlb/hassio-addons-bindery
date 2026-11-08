@@ -1,0 +1,61 @@
+#include <tunables/global>
+
+# Profile for the Bindery app.
+# `file,` is deliberate: the app reads and writes user libraries on arbitrary
+# paths (/media, /share, mounted disks), so per-path file rules would only be
+# theatre. What the profile does constrain is privilege escalation: only the
+# capabilities the startup script needs are granted, and no other profile can
+# be entered.
+profile bindery flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  # Needed by the preparation script: chown of the data folder, mount/umount of
+  # the disks listed in `localdisks`, and user switching for PUID/PGID.
+  capability chown,
+  capability dac_override,
+  capability dac_read_search,
+  capability fowner,
+  capability fsetid,
+  capability mknod,
+  capability setgid,
+  capability setuid,
+  capability sys_admin,
+  file,
+  mount,
+  umount,
+  remount,
+  signal,
+
+  network,
+  /dev/** rwkl,
+  /tmp/** rwkl,
+  /run/** rwkl,
+
+  # S6 overlay
+  /init ix,
+  /package/** ix,
+  /command/** ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /usr/lib/** r,
+  /etc/s6/** rix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+
+  # Option files, the app's own data and the mapped Home Assistant folders
+  /data/** rw,
+  /media/** rw,
+  /share/** rw,
+  /mnt/** rw,
+  /etc/localtime rw,
+  /etc/timezone rw,
+  /etc/passwd r,
+  /etc/group r,
+  /proc/** r,
+  /sys/** r,
+
+  # Bindery binary
+  /usr/bin/bindery rix,
+  /usr/lib/bindery/** rix,
+}

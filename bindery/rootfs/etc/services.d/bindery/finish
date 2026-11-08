@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# shellcheck shell=bash
+# ==============================================================================
+# Bindery app - service exit handler
+#
+# A clean exit (0) restarts the service; a crash stops the container with the
+# same exit code, so the Supervisor shows the app as stopped instead of
+# restarting a broken instance in a loop.
+# ==============================================================================
+declare APP_EXIT_CODE=${1}
+
+if [[ "${APP_EXIT_CODE}" -ne 0 ]] && [[ "${APP_EXIT_CODE}" -ne 256 ]]; then
+    printf '[WARN] Bindery exited with code %s, stopping the app\n' "${APP_EXIT_CODE}"
+    echo "${APP_EXIT_CODE}" > /run/s6-linux-init-container-results/exitcode
+    exec /run/s6/basedir/bin/halt
+fi
+
+printf '[INFO] Bindery exited cleanly, restarting\n'

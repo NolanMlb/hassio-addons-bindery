@@ -1,0 +1,115 @@
+name: Bindery
+version: "1.48.0-1"
+slug: bindery
+description: Automated ebook and audiobook manager (Readarr replacement) with Prowlarr and qBittorrent support
+url: "https://github.com/NolanMlb/hassio-addons-bindery/tree/main/bindery"
+arch:
+  - aarch64
+  - amd64
+init: false
+# A SQLite database is copied file by file during a snapshot: stop the app so
+# the copy is consistent. Bindery itself also has a VACUUM INTO backup API.
+backup: cold
+# Bindery drains in-flight requests (10s) then background jobs (15s) on SIGTERM.
+timeout: 45
+image: "ghcr.io/nolanmlb/hassio-addons-bindery"
+map:
+  - type: media
+    read_only: false
+  - type: share
+    read_only: false
+ports:
+  8787/tcp: 8787
+ports_description:
+  8787/tcp: Web interface (Bindery listens on 8787 inside the container)
+webui: "http://[HOST]:[PORT:8787]"
+# Device nodes handed to the container so that external disks listed in
+# `localdisks` can be mounted inside the container's own mount namespace.
+# Nothing is mounted unless the user asks for it.
+devices:
+  - /dev/sda
+  - /dev/sda1
+  - /dev/sda2
+  - /dev/sda3
+  - /dev/sda4
+  - /dev/sdb
+  - /dev/sdb1
+  - /dev/sdb2
+  - /dev/sdb3
+  - /dev/sdb4
+  - /dev/sdc
+  - /dev/sdc1
+  - /dev/sdc2
+  - /dev/sdc3
+  - /dev/sdc4
+  - /dev/sdd
+  - /dev/sdd1
+  - /dev/sdd2
+  - /dev/sdd3
+  - /dev/sdd4
+  - /dev/sde
+  - /dev/sde1
+  - /dev/sde2
+  - /dev/sde3
+  - /dev/sde4
+  - /dev/sdf
+  - /dev/sdf1
+  - /dev/sdf2
+  - /dev/sdf3
+  - /dev/sdf4
+  - /dev/sdg
+  - /dev/sdg1
+  - /dev/sdg2
+  - /dev/sdg3
+  - /dev/sdg4
+  - /dev/nvme0
+  - /dev/nvme0n1
+  - /dev/nvme0n1p1
+  - /dev/nvme0n1p2
+  - /dev/nvme0n1p3
+  - /dev/nvme1n1
+  - /dev/nvme1n1p1
+  - /dev/nvme1n1p2
+  - /dev/nvme1n1p3
+  - /dev/mmcblk0
+  - /dev/mmcblk0p1
+  - /dev/mmcblk0p2
+  - /dev/mmcblk0p3
+  - /dev/fuse
+udev: true
+# SYS_ADMIN: mount/umount of the disks listed in `localdisks`.
+# DAC_READ_SEARCH: read files on those disks whose permissions would otherwise
+# deny the container user (e.g. a drive written by another app as root).
+# Both are only exercised when `localdisks` is non-empty.
+privileged:
+  - SYS_ADMIN
+  - DAC_READ_SEARCH
+options:
+  log_level: info
+  TZ: UTC
+  PUID: 0
+  PGID: 0
+  localdisks: []
+  library_dir: /media/books
+  downloads_dir: /media/downloads
+  audiobooks_dir: ""
+  audiobook_downloads_dir: ""
+  dir_mode: "0750"
+  telemetry: true
+  env_vars: []
+schema:
+  log_level: "list(debug|info|warn|error)"
+  TZ: str
+  PUID: "int(0,)"
+  PGID: "int(0,)"
+  localdisks:
+    - str
+  library_dir: str
+  downloads_dir: str
+  audiobooks_dir: str?
+  audiobook_downloads_dir: str?
+  dir_mode: "list(0700|0750|0755)"
+  telemetry: bool
+  env_vars:
+    - name: "match(^BINDERY_[A-Z0-9_]+$)"
+      value: str?

@@ -1,0 +1,19 @@
+# One external disk, mounted whole at /mnt/sda1. Import is a hardlink because the
+# library and the downloads are two folders of the same mount.
+log_level: info
+TZ: Europe/Paris
+PUID: 0
+PGID: 0
+localdisks:
+  - sda1
+library_dir: /mnt/sda1/Media/Books
+downloads_dir: /mnt/sda1/Downloads/books
+audiobooks_dir: /mnt/sda1/Media/Books/Audiobooks
+audiobook_downloads_dir: ""
+dir_mode: "0750"
+telemetry: true
+# OpenLibrary rate-limits per user agent: give it a contact address.
+env_vars:
+  - name: BINDERY_CONTACT
+    value: you@example.org
+    # value: !secret bindery_contact

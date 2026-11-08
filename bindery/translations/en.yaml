@@ -1,0 +1,58 @@
+configuration:
+  log_level:
+    name: Log level
+    description: How much Bindery writes to the app log.
+  TZ:
+    name: Timezone
+    description: Timezone of the container, for example Europe/Paris or America/New_York.
+  PUID:
+    name: User ID (PUID)
+    description: >-
+      UID that writes the library. 0 means root, which matches the default of most
+      download clients here. If you change it, give PGID the same treatment and make
+      sure the folders it writes to are writable by that user.
+  PGID:
+    name: Group ID (PGID)
+    description: GID that writes the library. Keep it consistent with PUID.
+  localdisks:
+    name: Local disks
+    description: >-
+      External disks to mount, for example sda1, by label "MyBook", by UUID, or
+      "sda1/Media/Books" to expose one folder only. Leave empty to use the Home
+      Assistant folders (/media and /share) and no external disk.
+  library_dir:
+    name: Library folder
+    description: >-
+      Where Bindery puts imported books, as seen from inside the app. Default
+      /media/books, which is the Home Assistant media folder.
+  downloads_dir:
+    name: Downloads folder
+    description: >-
+      Where the download client puts completed books, as seen from inside the app.
+      Use the same mount point as the download client (default /media/downloads) so
+      no path remapping is needed.
+  audiobooks_dir:
+    name: Audiobook folder
+    description: >-
+      Optional separate folder for audiobooks. Leave empty to store them next to the
+      ebooks in the library folder.
+  audiobook_downloads_dir:
+    name: Audiobook downloads folder
+    description: >-
+      Optional separate folder for audiobook downloads. Leave empty to reuse the
+      downloads folder.
+  dir_mode:
+    name: Folder permissions
+    description: >-
+      Permissions given to the folders Bindery creates. Relax to 0755 if another
+      program needs to read the library as a different user.
+  telemetry:
+    name: Anonymous usage statistics
+    description: >-
+      Bindery sends one anonymous ping a day. Turn this off to disable it before the
+      first start.
+  env_vars:
+    name: Extra environment variables
+    description: >-
+      Advanced settings, passed to Bindery as BINDERY_*. See the documentation for
+      the list of supported variables.
