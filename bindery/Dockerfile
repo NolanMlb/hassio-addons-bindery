@@ -11,6 +11,9 @@ ARG BINDERY_REPOSITORY=ghcr.io/vavallee/bindery
 
 FROM ${BINDERY_REPOSITORY}:${BINDERY_VERSION} AS upstream
 
+# The base image is pinned by the ARG default above; Hadolint cannot see through
+# the variable and asks for an explicit tag.
+# hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
 # Fail the container when a preparation script fails instead of starting
