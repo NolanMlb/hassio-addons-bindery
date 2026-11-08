@@ -65,7 +65,7 @@ docker run --rm -it --privileged --device /dev/sda1 \
 ## Tests
 
 ```bash
-make test          # 27 assertions, builds the image first
+make test          # 28 assertions, builds the image first
 make test-no-build # against the existing image
 ```
 

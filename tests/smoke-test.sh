@@ -210,7 +210,8 @@ run_app smoke-bad "${D5}" "$((PORT + 4))"
 sleep 8
 log_has smoke-bad 'FATAL' \
     && ok "a missing disk is reported as fatal" || ko "a missing disk is reported as fatal"
-check_not "the app is not left running" docker inspect -f '{{.State.Running}}' smoke-bad 2>/dev/null | grep -q true
+check_not "the app is not left running" \
+    sh -c "docker inspect -f '{{.State.Running}}' smoke-bad 2>/dev/null | grep -q true"
 docker rm -f smoke-bad >/dev/null 2>&1
 
 echo "== Test 6: library outside a mounted disk is refused"
@@ -240,7 +241,8 @@ for _ in 1 2 3 4 5 6 7 8; do
     sleep 3
 done
 sleep 3
-check_not "the app ends up stopped" docker inspect -f '{{.State.Running}}' smoke-loop 2>/dev/null | grep -q true
+check_not "the app ends up stopped" \
+    sh -c "docker inspect -f '{{.State.Running}}' smoke-loop 2>/dev/null | grep -q true"
 log_has smoke-loop 'giving up' \
     && ok "the log explains why it stopped" || ko "the log explains why it stopped"
 docker rm -f smoke-loop >/dev/null 2>&1
