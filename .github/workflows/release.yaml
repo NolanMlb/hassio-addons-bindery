@@ -24,7 +24,11 @@ jobs:
       - name: Read the app version
         id: version
         run: |
-          version="$(yq -r '.version' bindery/config.yaml)"
+          version="$(sed -n 's/^version:[[:space:]]*//p' bindery/config.yaml | tr -d '"' | head -1)"
+          if [[ -z "${version}" ]]; then
+            echo "Could not read the version from bindery/config.yaml" >&2
+            exit 1
+          fi
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           echo "tag=v${version}" >> "$GITHUB_OUTPUT"
 
