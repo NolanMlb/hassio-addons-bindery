@@ -63,8 +63,8 @@ devices_matching() {
     local ident="${1}" line dev uuid label
     while IFS= read -r line; do
         dev="${line%%:*}"
-        uuid="$(printf '%s' "${line}" | sed -n 's/.*UUID="\([^"]*\)".*/\1/p')"
-        label="$(printf '%s' "${line}" | sed -n 's/.*LABEL="\([^"]*\)".*/\1/p')"
+        uuid="$(blkid_field "${line}" UUID)"
+        label="$(blkid_field "${line}" LABEL)"
         if [ -n "${uuid}" ] && [ "${uuid,,}" = "${ident,,}" ]; then
             printf '%s\n' "${dev}"
             continue

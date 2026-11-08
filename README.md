@@ -51,7 +51,7 @@ folders, USB disk, several disks): [docs/STORAGE.md](./docs/STORAGE.md).
 
 ## Project status
 
-Verified in this repository (see [tests/smoke-test.sh](./tests/smoke-test.sh), 28 assertions):
+Verified in this repository (see [tests/smoke-test.sh](./tests/smoke-test.sh), 31 assertions):
 
 - image builds for `linux/amd64` and `linux/arm64`, and the amd64 binary runs (health check
   reaches Bindery);

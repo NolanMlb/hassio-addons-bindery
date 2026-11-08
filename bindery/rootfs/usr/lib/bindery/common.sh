@@ -43,6 +43,18 @@ opt_list() {
         "${OPTIONS_FILE}" 2>/dev/null || true
 }
 
+# blkid_field <blkid line> <FIELD> -> the value of that field, or nothing.
+#
+# A blkid line looks like:
+#   /dev/sda1: LABEL="HA_MEDIA" UUID="66ad-…" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="6f1a-01"
+# The field must be preceded by a space, otherwise "UUID" also matches inside
+# "PARTUUID" and "LABEL" inside "PARTLABEL" -- which is exactly how a real disk
+# failed to resolve its own UUID.
+blkid_field() {
+    local line="${1}" field="${2}"
+    printf '%s' "${line}" | sed -n "s/.*[[:space:]]${field}=\"\([^\"]*\)\".*/\1/p"
+}
+
 # True when <path> lives on a mount that is not the container's own root
 # filesystem. Used to refuse writing a library into a disk that failed to mount.
 path_on_mount() {

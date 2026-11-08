@@ -25,7 +25,7 @@ cleanup() {
         docker run --rm --privileged -v /dev:/dev alpine:3.22 losetup -d "${LOOPDEV}" >/dev/null 2>&1
     fi
     docker volume rm -f smoke-t2-data >/dev/null 2>&1
-    docker rm -f smoke-bindery smoke-puid smoke-disk smoke-sub smoke-bad smoke-nodev smoke-loop >/dev/null 2>&1
+    docker rm -f smoke-bindery smoke-puid smoke-disk smoke-uuid smoke-sub smoke-bad smoke-nodev smoke-loop >/dev/null 2>&1
     rm -rf "${WORK}"
 }
 trap cleanup EXIT
@@ -95,6 +95,15 @@ if [ "${1:-}" != "--no-build" ]; then
     docker build -q -t "${IMAGE}" "${APP_DIR}" >/dev/null || { echo "build failed"; exit 1; }
 fi
 
+echo "== Test 0: blkid line parsing (UUID vs PARTUUID)"
+if docker run --rm --entrypoint /bin/bash -v "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd):/tests:ro" \
+    "${IMAGE}" /tests/test-parsing.sh >"${WORK}/parsing.log" 2>&1; then
+    ok "le parseur lit UUID/LABEL et ignore PARTUUID/PARTLABEL"
+else
+    ko "le parseur lit UUID/LABEL et ignore PARTUUID/PARTLABEL"
+    sed -n '1,40p' "${WORK}/parsing.log"
+fi
+
 echo "== Test 1: default storage (Home Assistant folders only)"
 D1="${WORK}/t1"
 mkdir -p "${D1}/media" "${D1}/share"
@@ -154,7 +163,9 @@ LOOPDEV="$(docker run --rm --privileged -v "${WORK}:/host" alpine:3.22 sh -c '
   mkfs.ext4 -q -L SmokeBooks "$LOOP" || exit 1
   mkdir -p /mnt/x && mount "$LOOP" /mnt/x || exit 1
   mkdir -p /mnt/x/Media/Books && echo marker > /mnt/x/Media/Books/marker.txt
-  umount /mnt/x && echo "$LOOP"' 2>/dev/null | tail -1)"
+  umount /mnt/x && echo "$LOOP $(blkid -o value -s UUID "$LOOP")"' 2>/dev/null | tail -1)"
+DISKUUID="$(printf '%s' "${LOOPDEV}" | awk '{print $2}')"
+LOOPDEV="$(printf '%s' "${LOOPDEV}" | awk '{print $1}')"
 DISK="$(basename "${LOOPDEV:-none}")"
 if [ -b /dev/null ] && [ "${DISK}" != "none" ]; then
     :
@@ -182,6 +193,18 @@ if [ "${PRIV_OK}" -eq 1 ]; then
     log_has smoke-disk 'Hardlinks available' \
         && ok "hardlink capability detected at startup" || ko "hardlink capability detected at startup"
     docker rm -f smoke-disk >/dev/null 2>&1
+
+    echo "== Test 3b: same disk, mounted by UUID"
+    D3B="${WORK}/t3b"
+    mkdir -p "${D3B}/media" "${D3B}/share"
+    write_options "${D3B}" "{\"log_level\":\"info\",\"TZ\":\"UTC\",\"PUID\":0,\"PGID\":0,\"localdisks\":[\"${DISKUUID}\"],
+     \"library_dir\":\"/mnt/${DISK}/books\",\"downloads_dir\":\"/mnt/${DISK}/downloads\",\"audiobooks_dir\":\"\",
+     \"audiobook_downloads_dir\":\"\",\"dir_mode\":\"0750\",\"telemetry\":true,\"env_vars\":[]}"
+    run_app smoke-uuid "${D3B}" "$((PORT + 7))" --privileged --device "${LOOPDEV}"
+    check "app starts with a disk identified by UUID" wait_health "$((PORT + 7))"
+    log_has smoke-uuid "mounted at /mnt/${DISK}" \
+        && ok "UUID résolu vers le bon périphérique" || ko "UUID résolu vers le bon périphérique"
+    docker rm -f smoke-uuid >/dev/null 2>&1
 
     echo "== Test 4: only one folder of a disk"
     D4="${WORK}/t4"

@@ -1,4 +1,15 @@
 <!-- https://contributors.home-assistant.io/apps/guides/presentation/#changelog -->
+## 1.48.0-2
+
+- **Fix a disk identified by UUID never being found.** A real disk is listed by `blkid` with
+  `PARTUUID` after `UUID`, and the parser matched the `UUID=` inside `PARTUUID=`, so
+  `localdisks: [66ad9fe2-…]` reported "matches no device, UUID or label visible in the container"
+  and the app refused to start. The same defect made a partition label resolve to `PARTLABEL`
+  instead of `LABEL`.
+- Field parsing moved into `common.sh` (`blkid_field`) with unit tests covering `PARTUUID`,
+  `PARTLABEL`, a label containing a space, and a UUID as the first field.
+- Smoke tests: mounting by UUID is now a test of its own, from a real block device (31 assertions).
+
 ## 1.48.0-1
 
 Initial release.
