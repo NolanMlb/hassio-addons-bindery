@@ -50,7 +50,7 @@ jobs:
           # arrives as a JSON scalar: strings keep their double quotes, and the
           # build action does not strip them back (a quoted tag is an invalid
           # reference). Decode them here, keeping a plain value as-is.
-          unquote() { printf '%s' "${1}" | jq -Rs 'fromjson? // .'; }
+          unquote() { printf '%s' "${1}" | jq -rRs 'fromjson? // .'; }
 
           image="$(unquote "${INFO_IMAGE}")"
           version="$(unquote "${INFO_VERSION}")"
