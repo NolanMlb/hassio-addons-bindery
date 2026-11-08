@@ -7,8 +7,8 @@
 #   IMAGE=my/image:tag ./tests/smoke-test.sh
 #
 # Tests 1 and 2 need nothing special. Tests 3 to 5 create a loop device and
-# therefore need a Docker daemon that allows privileged containers (Docker
-# Desktop, OrbStack, a Linux host). They are skipped otherwise.
+# therefore need a Docker daemon that allows privileged containers. They are
+# skipped otherwise.
 # ==============================================================================
 set -uo pipefail
 
